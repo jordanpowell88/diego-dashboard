@@ -1,0 +1,44 @@
+[
+  {
+    "timestamp": "2026-02-26T11:00:00.000Z",
+    "type": "email",
+    "action": "Sent Honduras trip follow-up",
+    "details": "Email to Samantha Ark (33samanthaark@gmail.com) about July Honduras mission trip"
+  },
+  {
+    "timestamp": "2026-02-26T11:01:00.000Z",
+    "type": "calendar",
+    "action": "Created recurring walk events",
+    "details": "Added 4 daily walking reminders: fasted morning, post-breakfast, post-lunch, post-dinner"
+  },
+  {
+    "timestamp": "2026-02-26T11:02:00.000Z",
+    "type": "reminder",
+    "action": "Set ACV reminders",
+    "details": "Daily reminders at 12:00 PM and 6:45 PM for apple cider vinegar"
+  },
+  {
+    "timestamp": "2026-02-26T10:59:00.000Z",
+    "type": "search",
+    "action": "Researched walking pads",
+    "details": "Found AKLUER under-desk treadmill recommendation"
+  },
+  {
+    "timestamp": "2026-02-26T10:50:00.000Z",
+    "type": "other",
+    "action": "Summarized fat loss video",
+    "details": "Extracted 5 mechanical rules from Dr. Mike's YouTube video and created personalized daily plan"
+  },
+  {
+    "timestamp": "2026-02-24T14:00:00.000Z",
+    "type": "reminder",
+    "action": "Morning reminder fired",
+    "details": "Reminded Jordan: Oscar boarding, carpet cleaning, Tyler payment"
+  },
+  {
+    "timestamp": "2026-02-23T22:48:00.000Z",
+    "type": "email",
+    "action": "Sent Honduras follow-up",
+    "details": "Samantha Ark interested in July Honduras trip - sent welcome email with GoMethod link"
+  }
+]
