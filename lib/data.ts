@@ -377,3 +377,81 @@ export function getStats() {
     peopleTracked: parsePeople().length,
   }
 }
+
+export interface Skill {
+  name: string
+  description: string
+  location: string
+  type: 'builtin' | 'custom'
+  status: 'working' | 'needs-setup' | 'needs-test' | 'unknown'
+  requires?: string[]
+  envVars?: string[]
+}
+
+export function getSkills(): Skill[] {
+  const skills: Skill[] = []
+  
+  // Built-in skills
+  const builtinPath = '/opt/homebrew/lib/node_modules/openclaw/skills'
+  if (fs.existsSync(builtinPath)) {
+    const builtinDirs = fs.readdirSync(builtinPath).filter(f => 
+      fs.statSync(path.join(builtinPath, f)).isDirectory()
+    )
+    
+    for (const dir of builtinDirs) {
+      const skillPath = path.join(builtinPath, dir, 'SKILL.md')
+      if (fs.existsSync(skillPath)) {
+        const content = fs.readFileSync(skillPath, 'utf-8')
+        const descMatch = content.match(/description:\s*(.+)/i)
+        const envMatch = content.match(/env:\s*\[([^\]]+)\]/i) || content.match(/requires.*env.*?["']([^"']+)["']/gi)
+        
+        skills.push({
+          name: dir,
+          description: descMatch?.[1]?.trim() || 'No description',
+          location: skillPath,
+          type: 'builtin',
+          status: 'working',
+          envVars: envMatch ? [envMatch[1]] : undefined
+        })
+      }
+    }
+  }
+  
+  // Custom skills
+  const customPath = path.join(WORKSPACE, 'skills')
+  if (fs.existsSync(customPath)) {
+    const customDirs = fs.readdirSync(customPath).filter(f => 
+      fs.statSync(path.join(customPath, f)).isDirectory()
+    )
+    
+    for (const dir of customDirs) {
+      const skillPath = path.join(customPath, dir, 'SKILL.md')
+      if (fs.existsSync(skillPath)) {
+        const content = fs.readFileSync(skillPath, 'utf-8')
+        const descMatch = content.match(/description:\s*["']?([^"'\n]+)["']?/i)
+        const envMatch = content.match(/env:\s*\[([^\]]+)\]/i)
+        
+        // Determine status based on SKILLS.md tracking file
+        let status: Skill['status'] = 'unknown'
+        const skillsTracking = path.join(WORKSPACE, 'SKILLS.md')
+        if (fs.existsSync(skillsTracking)) {
+          const tracking = fs.readFileSync(skillsTracking, 'utf-8')
+          if (tracking.includes(`| ${dir} | ✅`)) status = 'working'
+          else if (tracking.includes(`| ${dir} | 🔧`)) status = 'needs-test'
+          else if (tracking.includes(`| ${dir} | ⏳`)) status = 'needs-setup'
+        }
+        
+        skills.push({
+          name: dir,
+          description: descMatch?.[1]?.trim() || 'No description',
+          location: skillPath,
+          type: 'custom',
+          status,
+          envVars: envMatch ? envMatch[1].split(',').map(s => s.trim()) : undefined
+        })
+      }
+    }
+  }
+  
+  return skills
+}

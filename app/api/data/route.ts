@@ -11,7 +11,8 @@ import {
   parseHoldings,
   getRecentActivity, 
   getTaskLog,
-  getStats 
+  getStats,
+  getSkills
 } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
@@ -30,6 +31,7 @@ export async function GET() {
     const recentActivity = getRecentActivity()
     const taskLog = getTaskLog()
     const stats = getStats()
+    const skills = getSkills()
     
     return NextResponse.json({
       userInfo,
@@ -47,6 +49,7 @@ export async function GET() {
       recentActivity,
       taskLog: taskLog.slice(0, 50), // Last 50 tasks
       stats,
+      skills,
       lastUpdated: new Date().toISOString()
     })
   } catch (error) {

@@ -44,6 +44,16 @@ interface Holding {
   pnl?: string
 }
 
+interface Skill {
+  name: string
+  description: string
+  location: string
+  type: 'builtin' | 'custom'
+  status: 'working' | 'needs-setup' | 'needs-test' | 'unknown'
+  requires?: string[]
+  envVars?: string[]
+}
+
 interface DashboardData {
   userInfo: Record<string, string>
   projects: Project[]
@@ -56,10 +66,11 @@ interface DashboardData {
   recentActivity: { date: string; items: string[] }[]
   taskLog: TaskLog[]
   stats: { totalMemoryFiles: number; projectsTracked: number; activeProjects: number; lastActivity: string; tasksLogged: number; tasksToday: number; peopleTracked: number }
+  skills: Skill[]
   lastUpdated: string
 }
 
-const TABS = ['Overview', 'Projects', 'Memory', 'People', 'Tasks', 'Trading'] as const
+const TABS = ['Overview', 'Projects', 'Memory', 'People', 'Tasks', 'Trading', 'Skills'] as const
 type Tab = typeof TABS[number]
 
 export default function Dashboard() {
@@ -136,6 +147,7 @@ export default function Dashboard() {
         {activeTab === 'People' && <PeopleTab data={data} />}
         {activeTab === 'Tasks' && <TasksTab data={data} cronJobs={cronJobs} />}
         {activeTab === 'Trading' && <TradingTab data={data} />}
+        {activeTab === 'Skills' && <SkillsTab data={data} />}
       </main>
 
       {/* Footer */}
@@ -549,4 +561,104 @@ function TypeIcon({ type }: { type: string }) {
     other: '📌'
   }
   return <span>{icons[type] || icons.other}</span>
+}
+
+function SkillsTab({ data }: { data: DashboardData | null }) {
+  if (!data) return null
+  
+  const skills = data.skills || []
+  const builtinSkills = skills.filter(s => s.type === 'builtin')
+  const customSkills = skills.filter(s => s.type === 'custom')
+  
+  const statusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      'working': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'needs-setup': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      'needs-test': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      'unknown': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    }
+    const labels: Record<string, string> = {
+      'working': '✅ Working',
+      'needs-setup': '⏳ Needs Setup',
+      'needs-test': '🔧 Needs Test',
+      'unknown': '❓ Unknown',
+    }
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs border ${styles[status] || styles.unknown}`}>
+        {labels[status] || status}
+      </span>
+    )
+  }
+  
+  const SkillCard = ({ skill }: { skill: Skill }) => (
+    <div className="card hover:border-purple-500/50 transition-colors">
+      <div className="flex items-start justify-between mb-2">
+        <h4 className="font-medium text-white">{skill.name}</h4>
+        {statusBadge(skill.status)}
+      </div>
+      <p className="text-sm text-gray-400 mb-2 line-clamp-2">{skill.description}</p>
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <span className={skill.type === 'custom' ? 'text-purple-400' : 'text-blue-400'}>
+          {skill.type === 'custom' ? '🔧 Custom' : '📦 Built-in'}
+        </span>
+        {skill.envVars && skill.envVars.length > 0 && (
+          <span className="text-yellow-500" title={skill.envVars.join(', ')}>
+            🔑 Requires env
+          </span>
+        )}
+      </div>
+    </div>
+  )
+  
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard label="Total Skills" value={skills.length} icon="🛠️" />
+        <StatCard label="Built-in" value={builtinSkills.length} icon="📦" />
+        <StatCard label="Custom" value={customSkills.length} icon="🔧" />
+        <StatCard label="Working" value={skills.filter(s => s.status === 'working').length} icon="✅" />
+      </div>
+      
+      {/* Custom Skills */}
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+          <span>🔧</span> Custom Skills
+          <span className="text-sm font-normal text-gray-400">({customSkills.length})</span>
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {customSkills.map(skill => (
+            <SkillCard key={skill.name} skill={skill} />
+          ))}
+        </div>
+        {customSkills.length === 0 && (
+          <p className="text-gray-500 text-sm">No custom skills installed</p>
+        )}
+      </div>
+      
+      {/* Built-in Skills */}
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+          <span>📦</span> Built-in Skills
+          <span className="text-sm font-normal text-gray-400">({builtinSkills.length})</span>
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {builtinSkills.map(skill => (
+            <SkillCard key={skill.name} skill={skill} />
+          ))}
+        </div>
+      </div>
+      
+      {/* Legend */}
+      <div className="card">
+        <h4 className="font-medium text-gray-300 mb-2">Status Legend</h4>
+        <div className="flex flex-wrap gap-3 text-sm">
+          {statusBadge('working')} <span className="text-gray-400">Fully functional</span>
+          {statusBadge('needs-setup')} <span className="text-gray-400">Requires configuration</span>
+          {statusBadge('needs-test')} <span className="text-gray-400">Installed but untested</span>
+          {statusBadge('unknown')} <span className="text-gray-400">Status not tracked</span>
+        </div>
+      </div>
+    </div>
+  )
 }
